@@ -1,10 +1,11 @@
-import yaml
-import config
-import abc
-import pandas as pd
-import numpy as np
-from yaml.loader import SafeLoader
 from os import listdir
+
+import numpy as np
+import pandas as pd
+import yaml
+from yaml.loader import SafeLoader
+
+import config
 
 
 def _load_yaml_preset(preset="default"):
@@ -55,18 +56,19 @@ class Metric:
 
     @property
     def numerator_aggregation_function(self) -> callable:
-        return self._map_aggregation_function(self.numerator.get("aggregation_function"))
+        return self._map_aggregation_function(
+            self.numerator.get("aggregation_function")
+        )
 
     @property
     def denominator_aggregation_function(self) -> callable:
-        return self._map_aggregation_function(self.denominator.get("aggregation_function"))
+        return self._map_aggregation_function(
+            self.denominator.get("aggregation_function")
+        )
 
     @staticmethod
     def _map_aggregation_function(aggregation_function: str) -> callable:
-        mappings = {
-            "count_distinct": pd.Series.nunique,
-            "sum": np.sum
-        }
+        mappings = {"count_distinct": pd.Series.nunique, "sum": np.sum}
         if aggregation_function not in mappings:
             raise ValueError(f"{aggregation_function} not found in mappings")
         return mappings[aggregation_function]
@@ -77,12 +79,20 @@ class CalculateMetric:
         self.metric = metric
 
     def __call__(self, df):
-        return df.groupby([config.VARIANT_COL, self.metric.level]).apply(
-            lambda df: pd.Series({
-                "num": self.metric.numerator_aggregation_function(df[self.metric.numerator_aggregation_field]),
-                "den": self.metric.denominator_aggregation_function(df[self.metric.denominator_aggregation_field]),
-                "n": pd.Series.nunique(df[self.metric.level])
-            })
-        ).reset_index()
-
-
+        return (
+            df.groupby([config.VARIANT_COL, self.metric.level])
+            .apply(
+                lambda df: pd.Series(
+                    {
+                        "num": self.metric.numerator_aggregation_function(
+                            df[self.metric.numerator_aggregation_field]
+                        ),
+                        "den": self.metric.denominator_aggregation_function(
+                            df[self.metric.denominator_aggregation_field]
+                        ),
+                        "n": pd.Series.nunique(df[self.metric.level]),
+                    }
+                )
+            )
+            .reset_index()
+        )

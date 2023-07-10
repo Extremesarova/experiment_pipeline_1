@@ -1,11 +1,9 @@
 import pandas as pd
-import numpy as np
-import abc
-import utils
+
 import config as cfg
-from itertools import product
-from metric_builder import Metric, CalculateMetric
-from stattests import TTestFromStats, calculate_statistics, calculate_linearization
+from metric_builder import CalculateMetric, Metric
+from stattests import (TTestFromStats, calculate_linearization,
+                       calculate_statistics)
 
 
 class Report:
@@ -22,17 +20,20 @@ class BuildMetricReport:
         stats = calculate_statistics(df_, metric_items.type)
         criteria_res = ttest(stats)
 
-        report_items = pd.DataFrame({
-            "metric_name": metric_items.name,
-            "mean_0": stats.mean_0,
-            "mean_1": stats.mean_1,
-            "var_0": stats.var_0,
-            "var_1": stats.var_1,
-            "delta": stats.mean_1 - stats.mean_0,
-            "lift":  (stats.mean_1 - stats.mean_0) / stats.mean_0,
-            "pvalue": criteria_res.pvalue,
-            "statistic": criteria_res.statistic
-        }, index=[0])
+        report_items = pd.DataFrame(
+            {
+                "metric_name": metric_items.name,
+                "mean_0": stats.mean_0,
+                "mean_1": stats.mean_1,
+                "var_0": stats.var_0,
+                "var_1": stats.var_1,
+                "delta": stats.mean_1 - stats.mean_0,
+                "lift": (stats.mean_1 - stats.mean_0) / stats.mean_0,
+                "pvalue": criteria_res.pvalue,
+                "statistic": criteria_res.statistic,
+            },
+            index=[0],
+        )
 
         return Report(report_items)
 
@@ -48,4 +49,3 @@ def build_experiment_report(df, metric_config):
         reports.append(metric_report.report)
 
     return pd.concat(reports)
-

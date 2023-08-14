@@ -1,7 +1,7 @@
 import abc
 
 import numpy as np
-from scipy.stats import ttest_ind_from_stats
+from scipy.stats import mannwhitneyu, ttest_ind_from_stats
 
 import config as cfg
 
@@ -28,6 +28,16 @@ class Statistics:
         self.var_1 = var_1
         self.n_0 = n_0
         self.n_1 = n_1
+
+
+class Samples:
+    def __init__(
+        self,
+        sample_0: np.array,
+        sample_1: np.array,
+    ):
+        self.sample_0 = sample_0
+        self.sample_1 = sample_1
 
 
 class MetricStats(abc.ABC):
@@ -78,6 +88,17 @@ class TTestFromStats(Estimator):
                 std2=np.sqrt(stat.var_1),
                 nobs2=stat.n_1,
             )
+        except Exception as e:
+            cfg.logger.error(e)
+            statistic, pvalue = None, None
+
+        return EstimatorCriteriaValues(pvalue, statistic)
+
+
+class MannWhitneyU(Estimator):
+    def __call__(self, samples: Samples) -> EstimatorCriteriaValues:
+        try:
+            statistic, pvalue = mannwhitneyu(x=samples.sample_0, y=samples.sample_1)
         except Exception as e:
             cfg.logger.error(e)
             statistic, pvalue = None, None

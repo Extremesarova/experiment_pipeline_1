@@ -3,3 +3,4 @@ __pycache__/
 data/parquet/df.parquet
 utils.py
 venv
+experiment_report.csv
